@@ -12,7 +12,7 @@ public:
     rød,
     grønn,
     blå
-  };
+  } colour;
 
   enum class Dyr {
     katt,
@@ -22,32 +22,30 @@ public:
 };
 }
 
-#define FARGE Nn::Cc::Farge
-MAP_ENUM(FARGE,
-	 {"red", FARGE::rød},
-	 {"green", FARGE::grønn},
-	 {"blue", FARGE::blå});
-/*
-template <>
-const EnumWrapper<Nn::Cc::Farge>::MapType EnumWrapper<Nn::Cc::Farge>::map =
-  { {"red", Nn::Cc::Farge::rød},
-    {"green", Nn::Cc::Farge::grønn},
-    {"blue", Nn::Cc::Farge::blå} };
-*/
+typedef Nn::Cc::Farge FEnum;
+typedef Nn::Cc::Dyr DEnum;
 
-#define DYR Nn::Cc::Dyr
-MAP_ENUM(DYR,
-	 {"cat", DYR::katt},
-	 {"bird", DYR::fugl},
-	 {"hedgie", DYR::pinnesvinne});
 
 int main(int argc, char** argv)
 {
   std::string optName = "option.colour";
+  EnumWrapper<FEnum>::setMap({
+      {"red", FEnum::rød},
+      {"green", FEnum::grønn},
+      {"blue", FEnum::blå}
+  });
+  std::string dyrNavn = "option.animal";
+  EnumWrapper<DEnum>::setMap({
+	 {"cat", DEnum::katt},
+	 {"bird", DEnum::fugl},
+	 {"hedgie", DEnum::pinnesvinne}
+    });
+
 
   boost::program_options::options_description opt("Enum test");
   opt.add_options()
-    (optName.c_str(), boost::program_options::value<EnumWrapper<Nn::Cc::Farge>>(), "Specify a colour")
+    (optName.c_str(), boost::program_options::value<EnumWrapper<FEnum>>(), "Specify a colour")
+    (dyrNavn.c_str(), boost::program_options::value<EnumWrapper<DEnum>>(), "Choose an animal")
     ;
   boost::program_options::variables_map vm;
   boost::program_options::store(boost::program_options::command_line_parser(argc, argv)
@@ -56,9 +54,11 @@ int main(int argc, char** argv)
 				.allow_unregistered()
 				.run()
 				, vm);
-  Nn::Cc::Farge colour = vm[optName].as<EnumWrapper<Nn::Cc::Farge>>();
 
-  switch(colour) {
+  Nn::Cc fd;
+  fd.colour = vm[optName].as<EnumWrapper<FEnum>>();
+
+  switch(fd.colour) {
   case(Nn::Cc::Farge::rød):
     std::cout << "Red!" << std::endl;
     break;
@@ -71,6 +71,20 @@ int main(int argc, char** argv)
   default:
     std::cout << "No colour found" << std::endl;
     break;
+  }
+
+  switch(vm[dyrNavn].as<EnumWrapper<DEnum>>()) {
+  case(DEnum::katt):
+    std::cout << "Miaow!" << std::endl;
+    break;
+  case(DEnum::fugl):
+    std::cout << "Ronk!" << std::endl;
+    break;
+  case(DEnum::pinnesvinne):
+    std::cout << "Snuffle!" << std::endl;
+    break;
+  default:
+    std::cout << "Nothing is heard" << std::endl;
   }
   return 0;
 }
